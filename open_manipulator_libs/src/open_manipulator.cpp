@@ -59,7 +59,7 @@ void OpenManipulator::initOpenManipulator(bool using_actual_robot_state, STRING 
 
   addJoint("joint3",  // my name
            "joint2",  // parent name
-           "joint4",  // child name
+           "gripper",  // child name
            math::vector3(0.024, 0.0, 0.128),               // relative position
            math::convertRPYToRotationMatrix(0.0, 0.0, 0.0), // relative orientation
            Y_AXIS,    // axis of rotation
@@ -67,18 +67,8 @@ void OpenManipulator::initOpenManipulator(bool using_actual_robot_state, STRING 
            1.53,      // max joint limit (1.53 rad)
            -M_PI_2);  // min joint limit (-1.67 rad)
 
-  addJoint("joint4",  // my name
-           "joint3",  // parent name
-           "gripper", // child name
-           math::vector3(0.124, 0.0, 0.0),                 // relative position
-           math::convertRPYToRotationMatrix(0.0, 0.0, 0.0), // relative orientation
-           Y_AXIS,    // axis of rotation
-           14,        // actuator id
-           2.0,       // max joint limit (2.0 rad)
-           -1.8);     // min joint limit (-1.8 rad)
-
   addTool("gripper",  // my name
-          "joint4",   // parent name
+          "joint3",   // parent name
           math::vector3(0.126, 0.0, 0.0),                 // relative position
           math::convertRPYToRotationMatrix(0.0, 0.0, 0.0), // relative orientation
           15,         // actuator id
@@ -111,7 +101,7 @@ void OpenManipulator::initOpenManipulator(bool using_actual_robot_state, STRING 
     jointDxlId.push_back(11);
     jointDxlId.push_back(12);
     jointDxlId.push_back(13);
-    jointDxlId.push_back(14);
+    // jointDxlId.push_back(14);
     addJointActuator(JOINT_DYNAMIXEL, actuator_, jointDxlId, p_dxl_comm_arg);
 
     // Set joint actuator control mode
