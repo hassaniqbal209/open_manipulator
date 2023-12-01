@@ -31,6 +31,7 @@
 
 #define JOINT_DYNAMIXEL "joint_dxl"
 #define TOOL_DYNAMIXEL  "tool_dxl"
+#define TOOL_VACUUM "tool_vacuum"
 
 #define X_AXIS robotis_manipulator::math::vector3(1.0, 0.0, 0.0)
 #define Y_AXIS robotis_manipulator::math::vector3(0.0, 1.0, 0.0)

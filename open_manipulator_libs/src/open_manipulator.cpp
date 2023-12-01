@@ -119,12 +119,18 @@ void OpenManipulator::initOpenManipulator(bool using_actual_robot_state, STRING 
                               1.7605306e-05),                                   // inertial tensor
           math::vector3(0.028 + 8.3720668e-03, 0.0246, -4.2836895e-07)          // COM
           );
-        
+
+  // addTool("vacuum",   // my name
+  //           "joint4", // parent name
+  //           math::vector3(0.043, 0.0, 0.0), // relative position
+  //           math::convertRPYToRotationMatrix(0.0, 0.0, 0.0), // relative orientation
+  //           15); // actuator id
   /*****************************************************************************
   ** Initialize Kinematics 
   *****************************************************************************/
-  kinematics_ = new kinematics::SolverCustomizedforOMChain();
+  // kinematics_ = new kinematics::SolverCustomizedforOMChain();
 //  kinematics_ = new kinematics::SolverUsingCRAndSRPositionOnlyJacobian();
+  kinematics_ = new kinematics::SolverUsingCRAndSRJacobian();
   addKinematics(kinematics_);
 
   if(using_actual_robot_state)
@@ -156,33 +162,34 @@ void OpenManipulator::initOpenManipulator(bool using_actual_robot_state, STRING 
     /*****************************************************************************
     ** Initialize Tool Actuator
     *****************************************************************************/
-    tool_ = new dynamixel::GripperDynamixel();
+    // tool_ = new dynamixel::GripperDynamixel();
+    // tool_ = new dynamixel::GripperVacuum();
 
-    uint8_t gripperDxlId = 15;
-    addToolActuator(TOOL_DYNAMIXEL, tool_, gripperDxlId, p_dxl_comm_arg);
+    // uint8_t gripperDxlId = 15;
+    // addToolActuator(TOOL_VACUUM, tool_, gripperDxlId, p_dxl_comm_arg);//TOOL_DYNAMIXEL
 
     // Set gripper actuator control mode
-    STRING gripper_dxl_mode_arg = "current_based_position_mode";
-    void *p_gripper_dxl_mode_arg = &gripper_dxl_mode_arg;
-    setToolActuatorMode(TOOL_DYNAMIXEL, p_gripper_dxl_mode_arg);
+    // STRING gripper_dxl_mode_arg = "current_based_position_mode";
+    // void *p_gripper_dxl_mode_arg = &gripper_dxl_mode_arg;
+    // setToolActuatorMode(TOOL_DYNAMIXEL, p_gripper_dxl_mode_arg);
 
-    // Set gripper actuator parameter
-    STRING gripper_dxl_opt_arg[2];
-    void *p_gripper_dxl_opt_arg = &gripper_dxl_opt_arg;
-    gripper_dxl_opt_arg[0] = "Profile_Acceleration";
-    gripper_dxl_opt_arg[1] = "20";
-    setToolActuatorMode(TOOL_DYNAMIXEL, p_gripper_dxl_opt_arg);
+    // // Set gripper actuator parameter
+    // STRING gripper_dxl_opt_arg[2];
+    // void *p_gripper_dxl_opt_arg = &gripper_dxl_opt_arg;
+    // gripper_dxl_opt_arg[0] = "Profile_Acceleration";
+    // gripper_dxl_opt_arg[1] = "20";
+    // setToolActuatorMode(TOOL_DYNAMIXEL, p_gripper_dxl_opt_arg);
 
-    gripper_dxl_opt_arg[0] = "Profile_Velocity";
-    gripper_dxl_opt_arg[1] = "200";
-    setToolActuatorMode(TOOL_DYNAMIXEL, p_gripper_dxl_opt_arg);
+    // gripper_dxl_opt_arg[0] = "Profile_Velocity";
+    // gripper_dxl_opt_arg[1] = "200";
+    // setToolActuatorMode(TOOL_DYNAMIXEL, p_gripper_dxl_opt_arg);
 
     // Enable All Actuators 
     enableAllActuator();
 
     // Receive current angles from all actuators 
     receiveAllJointActuatorValue();
-    receiveAllToolActuatorValue();
+    // receiveAllToolActuatorValue();
   }
 
   /*****************************************************************************
