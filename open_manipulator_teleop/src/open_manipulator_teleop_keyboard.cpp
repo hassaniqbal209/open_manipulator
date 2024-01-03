@@ -33,11 +33,14 @@ OpenManipulatorTeleop::OpenManipulatorTeleop()
 
 OpenManipulatorTeleop::~OpenManipulatorTeleop()
 {
-  if(ros::isStarted()) {
-    ros::shutdown(); // explicitly needed since we use ros::start();
-    ros::waitForShutdown();
-  }
-  wait();
+  // if(ros::isStarted()) {
+  //   ros::shutdown(); // explicitly needed since we use ros::start();
+  //   ros::waitForShutdown();
+  // }
+  // wait();
+  restoreTerminalSettings();
+  ROS_INFO("Terminate OpenManipulator Joystick");
+  ros::shutdown();
 }
 
 void OpenManipulatorTeleop::initClient()
