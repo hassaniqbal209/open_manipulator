@@ -184,56 +184,6 @@ class GripperDynamixel : public robotis_manipulator::ToolActuator
   double receiveDynamixelValue();
 };
 
-// class GripperVacuum : public robotis_manipulator::ToolActuator
-// {
-//  private:
-//   int8_t actuator_id_;
-//   ActuatorValue tool_value_;
-
-//  public:
-//   GripperVacuum() {}
-//   virtual ~GripperVacuum() {}
-
-//   virtual void init(uint8_t actuator_id, const void *arg)
-//   {
-//     actuator_id_ = actuator_id;
-//     tool_value_.position = 0.0;
-//     pinMode(BDPIN_RELAY, OUTPUT);
-//     pinMode(BDPIN_PUMP_MOTOR, OUTPUT);
-//   }
-//   virtual void setMode(const void *arg){}
-//   virtual uint8_t getId()
-//   {
-//     return actuator_id_;
-//   }
-
-//   virtual void enable(){}
-//   virtual void disable(){}
-
-//   virtual bool sendToolActuatorValue(ActuatorValue value)
-//   {
-//     if(value.position == 0.0)
-//     {
-//       tool_value_.position = 0.0;
-//       // digitalWrite(BDPIN_RELAY, LOW);
-//       // digitalWrite(BDPIN_PUMP_MOTOR, LOW);
-//     }
-//     else if(value.position == 1.0)
-//     {
-//       tool_value_.position = 1.0;
-//       // digitalWrite(BDPIN_RELAY, HIGH);
-//       // digitalWrite(BDPIN_PUMP_MOTOR, HIGH);
-//     }
-//     return true;
-//   }
-//   virtual ActuatorValue receiveToolActuatorValue()
-//   {
-//     return tool_value_;
-//   }
-
-// ////////////////////////////////////////////////////////////////
-// };
-
 } // namespace DYNAMIXEL
 #endif // DYNAMIXEL_H_
 

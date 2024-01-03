@@ -68,7 +68,7 @@ void OpenManipulatorTeleop::jointStatesCallback(const sensor_msgs::JointState::C
     if (!msg->name.at(i).compare("joint1"))  temp_angle.at(0) = (msg->position.at(i));
     else if (!msg->name.at(i).compare("joint2"))  temp_angle.at(1) = (msg->position.at(i));
     else if (!msg->name.at(i).compare("joint3"))  temp_angle.at(2) = (msg->position.at(i));
-    else if (!msg->name.at(i).compare("joint4"))  temp_angle.at(3) = (msg->position.at(i));
+    else if (!msg->name.at(i).compare("gripper"))  temp_angle.at(3) = (msg->position.at(i));
   }
   present_joint_angle_ = temp_angle;
 }
@@ -240,7 +240,7 @@ void OpenManipulatorTeleop::setGoal(char ch)
     joint_name.push_back("joint1"); goalJoint.at(0) = JOINT_DELTA;
     joint_name.push_back("joint2");
     joint_name.push_back("joint3");
-    joint_name.push_back("joint4");
+    joint_name.push_back("gripper");
     setJointSpacePathFromPresent(joint_name, goalJoint, PATH_TIME);
   }
   else if (ch == 'h' || ch == 'H')
@@ -250,7 +250,7 @@ void OpenManipulatorTeleop::setGoal(char ch)
     joint_name.push_back("joint1"); goalJoint.at(0) = -JOINT_DELTA;
     joint_name.push_back("joint2");
     joint_name.push_back("joint3");
-    joint_name.push_back("joint4");
+    joint_name.push_back("gripper");
     setJointSpacePathFromPresent(joint_name, goalJoint, PATH_TIME);
   }
   else if (ch == 'u' || ch == 'U')
@@ -260,7 +260,7 @@ void OpenManipulatorTeleop::setGoal(char ch)
     joint_name.push_back("joint1");
     joint_name.push_back("joint2"); goalJoint.at(1) = JOINT_DELTA;
     joint_name.push_back("joint3");
-    joint_name.push_back("joint4");
+    joint_name.push_back("gripper");
     setJointSpacePathFromPresent(joint_name, goalJoint, PATH_TIME);
   }
   else if (ch == 'j' || ch == 'J')
@@ -270,7 +270,7 @@ void OpenManipulatorTeleop::setGoal(char ch)
     joint_name.push_back("joint1");
     joint_name.push_back("joint2"); goalJoint.at(1) = -JOINT_DELTA;
     joint_name.push_back("joint3");
-    joint_name.push_back("joint4");
+    joint_name.push_back("gripper");
     setJointSpacePathFromPresent(joint_name, goalJoint, PATH_TIME);
   }
   else if (ch == 'i' || ch == 'I')
@@ -280,7 +280,7 @@ void OpenManipulatorTeleop::setGoal(char ch)
     joint_name.push_back("joint1");
     joint_name.push_back("joint2");
     joint_name.push_back("joint3"); goalJoint.at(2) = JOINT_DELTA;
-    joint_name.push_back("joint4");
+    joint_name.push_back("gripper");
     setJointSpacePathFromPresent(joint_name, goalJoint, PATH_TIME);
   }
   else if (ch == 'k' || ch == 'K')
@@ -290,29 +290,29 @@ void OpenManipulatorTeleop::setGoal(char ch)
     joint_name.push_back("joint1");
     joint_name.push_back("joint2");
     joint_name.push_back("joint3"); goalJoint.at(2) = -JOINT_DELTA;
-    joint_name.push_back("joint4");
+    joint_name.push_back("gripper");
     setJointSpacePathFromPresent(joint_name, goalJoint, PATH_TIME);
   }
-  else if (ch == 'o' || ch == 'O')
-  {
-    printf("input : o \tincrease(++) joint 4 angle\n");
-    std::vector<std::string> joint_name;
-    joint_name.push_back("joint1");
-    joint_name.push_back("joint2");
-    joint_name.push_back("joint3");
-    joint_name.push_back("joint4"); goalJoint.at(3) = JOINT_DELTA;
-    setJointSpacePathFromPresent(joint_name, goalJoint, PATH_TIME);
-  }
-  else if (ch == 'l' || ch == 'L')
-  {
-    printf("input : l \tdecrease(--) joint 4 angle\n");
-    std::vector<std::string> joint_name;
-    joint_name.push_back("joint1");
-    joint_name.push_back("joint2");
-    joint_name.push_back("joint3");
-    joint_name.push_back("joint4"); goalJoint.at(3) = -JOINT_DELTA;
-    setJointSpacePathFromPresent(joint_name, goalJoint, PATH_TIME);
-  }
+  // else if (ch == 'o' || ch == 'O')
+  // {
+  //   printf("input : o \tincrease(++) joint 4 angle\n");
+  //   std::vector<std::string> joint_name;
+  //   joint_name.push_back("joint1");
+  //   joint_name.push_back("joint2");
+  //   joint_name.push_back("joint3");
+  //   joint_name.push_back("joint4"); goalJoint.at(3) = JOINT_DELTA;
+  //   setJointSpacePathFromPresent(joint_name, goalJoint, PATH_TIME);
+  // }
+  // else if (ch == 'l' || ch == 'L')
+  // {
+  //   printf("input : l \tdecrease(--) joint 4 angle\n");
+  //   std::vector<std::string> joint_name;
+  //   joint_name.push_back("joint1");
+  //   joint_name.push_back("joint2");
+  //   joint_name.push_back("joint3");
+  //   joint_name.push_back("joint4"); goalJoint.at(3) = -JOINT_DELTA;
+  //   setJointSpacePathFromPresent(joint_name, goalJoint, PATH_TIME);
+  // }
   else if (ch == 'g' || ch == 'G')
   {
     printf("input : g \topen gripper\n");
@@ -338,7 +338,7 @@ void OpenManipulatorTeleop::setGoal(char ch)
     joint_name.push_back("joint1"); joint_angle.push_back(0.0);
     joint_name.push_back("joint2"); joint_angle.push_back(-1.05);
     joint_name.push_back("joint3"); joint_angle.push_back(0.35);
-    joint_name.push_back("joint4"); joint_angle.push_back(0.70);
+    joint_name.push_back("gripper"); joint_angle.push_back(0.70);
     setJointSpacePath(joint_name, joint_angle, path_time);
   }
   else if (ch == '1')
@@ -351,7 +351,7 @@ void OpenManipulatorTeleop::setGoal(char ch)
     joint_name.push_back("joint1"); joint_angle.push_back(0.0);
     joint_name.push_back("joint2"); joint_angle.push_back(0.0);
     joint_name.push_back("joint3"); joint_angle.push_back(0.0);
-    joint_name.push_back("joint4"); joint_angle.push_back(0.0);
+    joint_name.push_back("gripper"); joint_angle.push_back(0.0);
     setJointSpacePath(joint_name, joint_angle, path_time);
   }
 }

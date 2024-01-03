@@ -55,14 +55,14 @@ MainWindow::~MainWindow() {}
 void MainWindow::timerCallback()
 {
   std::vector<double> joint_angle = qnode.getPresentJointAngle();
-  if(joint_angle.size() != 5)
+  if(joint_angle.size() != 4)
     return;
 
   ui.txt_j1->setText(QString::number(joint_angle.at(0),'f', 3));
   ui.txt_j2->setText(QString::number(joint_angle.at(1),'f', 3));
   ui.txt_j3->setText(QString::number(joint_angle.at(2),'f', 3));
-  ui.txt_j4->setText(QString::number(joint_angle.at(3),'f', 3));
-  ui.txt_grip->setText(QString::number(joint_angle.at(4),'f', 3));
+  // ui.txt_j4->setText(QString::number(joint_angle.at(3),'f', 3));
+  ui.txt_grip->setText(QString::number(joint_angle.at(3),'f', 3));
 
   std::vector<double> position = qnode.getPresentKinematicsPose();
   if(position.size() != 3)
@@ -148,7 +148,7 @@ void MainWindow::on_btn_init_pose_clicked(void)
   joint_name.push_back("joint1"); joint_angle.push_back(0.0);
   joint_name.push_back("joint2"); joint_angle.push_back(0.0);
   joint_name.push_back("joint3"); joint_angle.push_back(0.0);
-  joint_name.push_back("joint4"); joint_angle.push_back(0.0);
+  joint_name.push_back("gripper"); joint_angle.push_back(0.0);
 
   if(!qnode.setJointSpacePath(joint_name, joint_angle, path_time))
   {
@@ -168,7 +168,7 @@ void MainWindow::on_btn_home_pose_clicked(void)
   joint_name.push_back("joint1"); joint_angle.push_back(0.0);
   joint_name.push_back("joint2"); joint_angle.push_back(-1.05);
   joint_name.push_back("joint3"); joint_angle.push_back(0.35);
-  joint_name.push_back("joint4"); joint_angle.push_back(0.70);
+  joint_name.push_back("gripper"); joint_angle.push_back(0.70);
   if(!qnode.setJointSpacePath(joint_name, joint_angle, path_time))
   {
     writeLog("[ERR!!] Failed to send service");
@@ -211,8 +211,12 @@ void MainWindow::on_btn_read_joint_angle_clicked(void)
   ui.doubleSpinBox_j1->setValue(joint_angle.at(0));
   ui.doubleSpinBox_j2->setValue(joint_angle.at(1));
   ui.doubleSpinBox_j3->setValue(joint_angle.at(2));
-  ui.doubleSpinBox_j4->setValue(joint_angle.at(3));
-  ui.doubleSpinBox_gripper->setValue(joint_angle.at(4));
+  // ui.doubleSpinBox_j4->setValue(joint_angle.at(3));
+  ui.doubleSpinBox_gripper->setValue(joint_angle.at(3));
+  writeLog(QString::number(joint_angle.at(0),'f', 3));
+  writeLog(QString::number(joint_angle.at(1),'f', 3));
+  writeLog(QString::number(joint_angle.at(2),'f', 3));
+  writeLog(QString::number(joint_angle.at(3),'f', 3));
 
   writeLog("Read joint angle");
 }
@@ -220,16 +224,24 @@ void MainWindow::on_btn_send_joint_angle_clicked(void)
 {
   std::vector<std::string> joint_name;
   std::vector<double> joint_angle;
+  std::vector<double> joint_tool_angle;
   double path_time = ui.doubleSpinBox_time_js->value();
 
   joint_name.push_back("joint1"); joint_angle.push_back(ui.doubleSpinBox_j1->value());
   joint_name.push_back("joint2"); joint_angle.push_back(ui.doubleSpinBox_j2->value());
   joint_name.push_back("joint3"); joint_angle.push_back(ui.doubleSpinBox_j3->value());
-  joint_name.push_back("joint4"); joint_angle.push_back(ui.doubleSpinBox_j4->value());
+  joint_name.push_back("gripper"); joint_angle.push_back(ui.doubleSpinBox_j4->value()); 
+  joint_tool_angle.push_back(ui.doubleSpinBox_j4->value());
 
   if(!qnode.setJointSpacePath(joint_name, joint_angle, path_time))
   {
     writeLog("[ERR!!] Failed to send service");
+    return;
+  }
+
+  if(!qnode.setToolControl(joint_tool_angle))
+  {
+    writeLog("[ERR!!] Failed to send koint service");
     return;
   }
 
