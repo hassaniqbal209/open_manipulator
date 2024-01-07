@@ -25,7 +25,7 @@
   #include <robotis_manipulator/robotis_manipulator.h>
 #endif
 
-//#define KINEMATICS_DEBUG
+// #define KINEMATICS_DEBUG
 
 using namespace Eigen;
 using namespace robotis_manipulator;
@@ -105,6 +105,48 @@ private:
 public:
   SolverCustomizedforOMChain(){}
   virtual ~SolverCustomizedforOMChain(){}
+
+  virtual void setOption(const void *arg);
+  virtual MatrixXd jacobian(Manipulator *manipulator, Name tool_name);
+  virtual void solveForwardKinematics(Manipulator *manipulator);
+  virtual bool solveInverseKinematics(Manipulator *manipulator, Name tool_name, Pose target_pose, std::vector<JointValue>* goal_joint_value);
+};
+
+
+/*****************************************************************************
+** Kinematics Solver Using CHain Rule and Geometry
+*****************************************************************************/
+// class SolverUsingCRAndGeometry : public robotis_manipulator::Kinematics
+// {
+// private:
+//   void forwardKinematicsSolverUsingChainRule(Manipulator *manipulator, Name component_name);
+//   bool inverseKinematicsSolverUsingGeometry(Manipulator *manipulator, Name tool_name, Pose target_pose, std::vector<JointValue>* goal_joint_value);
+
+// public:
+//   SolverUsingCRAndGeometry() {}
+//   virtual ~SolverUsingCRAndGeometry() {}
+
+//   virtual void setOption(const void *arg);
+//   virtual MatrixXd jacobian(Manipulator *manipulator, Name tool_name);
+//   virtual void solveForwardKinematics(Manipulator *manipulator);
+//   virtual bool solveInverseKinematics(Manipulator *manipulator, Name tool_name, Pose target_pose, std::vector<JointValue>* goal_joint_value);
+// };
+
+
+/*****************************************************************************
+** Kinematics Solver Using Geometry Approach from OpenManipulator-P
+*****************************************************************************/
+class SolverUsingCRAndGeometry : public robotis_manipulator::Kinematics
+{
+private:
+  // bool with_gripper_ = false;
+
+  void forwardSolverUsingChainRule(Manipulator *manipulator, Name component_name);
+  bool inverseSolverUsingGeometry(Manipulator *manipulator, Name tool_name, Pose target_pose, std::vector<JointValue>* goal_joint_value);
+
+public:
+  SolverUsingCRAndGeometry(){}
+  virtual ~SolverUsingCRAndGeometry(){}
 
   virtual void setOption(const void *arg);
   virtual MatrixXd jacobian(Manipulator *manipulator, Name tool_name);

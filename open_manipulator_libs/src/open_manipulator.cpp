@@ -151,8 +151,9 @@ void OpenManipulator::initOpenManipulator(bool using_actual_robot_state, STRING 
  
   // TODO: Figure this out: why this is different in SCARA: kinematics_ = new scara_kinematics::SolverUsingCRAndGeometry();
   // kinematics_ = new kinematics::SolverCustomizedforOMChain();
+  kinematics_ = new kinematics::SolverUsingCRAndGeometry();
   //  kinematics_ = new kinematics::SolverUsingCRAndSRPositionOnlyJacobian();
-  kinematics_ = new kinematics::SolverUsingCRAndSRJacobian();
+  // kinematics_ = new kinematics::SolverUsingCRAndSRJacobian();
   // kinematics_ = new kinematics::SolverCustomizedforOMChain();
   addKinematics(kinematics_);
 

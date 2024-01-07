@@ -799,6 +799,7 @@ void SolverCustomizedforOMChain::forwardSolverUsingChainRule(Manipulator *manipu
                                    + (parent_pose_value.kinematic.orientation * manipulator->getComponentRelativePositionFromParent(my_name));
   //orientation
   my_pose_value.kinematic.orientation = parent_pose_value.kinematic.orientation * manipulator->getComponentRelativeOrientationFromParent(my_name) * math::rodriguesRotationMatrix(manipulator->getAxis(my_name), manipulator->getJointPosition(my_name)); 
+  // my_pose_value.kinematic.orientation = parent_pose_value.kinematic.orientation * math::rodriguesRotationMatrix(manipulator->getAxis(my_name), manipulator->getJointPosition(my_name));
   //linear velocity
   my_pose_value.dynamic.linear.velocity = math::vector3(0.0, 0.0, 0.0);
   //angular velocity
@@ -994,48 +995,253 @@ bool SolverCustomizedforOMChain::chainCustomInverseKinematics(Manipulator *manip
 }
 
 
+/*****************************************************************************
+** Kinematics Solver from Openmanipulator-P
+*****************************************************************************/
+void SolverUsingCRAndGeometry::setOption(const void *arg){}
+
+Eigen::MatrixXd SolverUsingCRAndGeometry::jacobian(Manipulator *manipulator, Name tool_name)
+{
+  Eigen::MatrixXd jacobian = Eigen::MatrixXd::Identity(6, manipulator->getDOF());
+
+  Eigen::Vector3d joint_axis = Eigen::Vector3d::Zero(3);
+
+  Eigen::Vector3d position_changed = Eigen::Vector3d::Zero(3);
+  Eigen::Vector3d orientation_changed = Eigen::Vector3d::Zero(3);
+  Eigen::VectorXd pose_changed = Eigen::VectorXd::Zero(6);
+
+  //////////////////////////////////////////////////////////////////////////////////
+
+  int8_t index = 0;
+  Name my_name =  manipulator->getWorldChildName();
+
+  for (int8_t size = 0; size < manipulator->getDOF(); size++)
+  {
+    Name parent_name = manipulator->getComponentParentName(my_name);
+    if (parent_name == manipulator->getWorldName())
+    {
+      joint_axis = manipulator->getWorldOrientation() * manipulator->getAxis(my_name);
+    }
+    else
+    {
+      joint_axis = manipulator->getComponentOrientationFromWorld(parent_name) * manipulator->getAxis(my_name);
+    }
+
+    position_changed = math::skewSymmetricMatrix(joint_axis) *
+                       (manipulator->getComponentPositionFromWorld(tool_name) - manipulator->getComponentPositionFromWorld(my_name));
+    orientation_changed = joint_axis;
+
+    pose_changed << position_changed(0),
+        position_changed(1),
+        position_changed(2),
+        orientation_changed(0),
+        orientation_changed(1),
+        orientation_changed(2);
+
+    jacobian.col(index) = pose_changed;
+    index++;
+    my_name = manipulator->getComponentChildName(my_name).at(0); // Get Child name which has active joint
+  }
+  return jacobian;
+}
+
+void SolverUsingCRAndGeometry::solveForwardKinematics(Manipulator *manipulator)
+{
+  forwardSolverUsingChainRule(manipulator, manipulator->getWorldChildName());
+}
+
+bool SolverUsingCRAndGeometry::solveInverseKinematics(Manipulator *manipulator, Name tool_name, Pose target_pose, std::vector<JointValue> *goal_joint_value)
+{
+  return inverseSolverUsingGeometry(manipulator, tool_name, target_pose, goal_joint_value);
+}
 
 
+//private
+void SolverUsingCRAndGeometry::forwardSolverUsingChainRule(Manipulator *manipulator, Name component_name)
+{
+  Name my_name = component_name;
+  Name parent_name = manipulator->getComponentParentName(my_name);
+  int8_t number_of_child = manipulator->getComponentChildName(my_name).size();
+
+  Pose parent_pose_value;
+  Pose my_pose_value;
+
+  //Get Parent Pose
+  if (parent_name == manipulator->getWorldName())
+  {
+    parent_pose_value = manipulator->getWorldPose();
+  }
+  else
+  {
+    parent_pose_value = manipulator->getComponentPoseFromWorld(parent_name);
+  }
+
+  //position
+  my_pose_value.kinematic.position = parent_pose_value.kinematic.position
+                                   + (parent_pose_value.kinematic.orientation * manipulator->getComponentRelativePositionFromParent(my_name));
+  //orientation
+  my_pose_value.kinematic.orientation = parent_pose_value.kinematic.orientation * manipulator->getComponentRelativeOrientationFromParent(my_name) * math::rodriguesRotationMatrix(manipulator->getAxis(my_name), manipulator->getJointPosition(my_name)); 
+  //linear velocity
+  my_pose_value.dynamic.linear.velocity = math::vector3(0.0, 0.0, 0.0);
+  //angular velocity
+  my_pose_value.dynamic.angular.velocity = math::vector3(0.0, 0.0, 0.0);
+  //linear acceleration
+  my_pose_value.dynamic.linear.acceleration = math::vector3(0.0, 0.0, 0.0);
+  //angular acceleration
+  my_pose_value.dynamic.angular.acceleration = math::vector3(0.0, 0.0, 0.0);
+
+  manipulator->setComponentPoseFromWorld(my_name, my_pose_value);
+
+  for (int8_t index = 0; index < number_of_child; index++)
+  {
+    Name child_name = manipulator->getComponentChildName(my_name).at(index);
+    forwardSolverUsingChainRule(manipulator, child_name);
+  }
+}
+
+bool SolverUsingCRAndGeometry::inverseSolverUsingGeometry(Manipulator *manipulator, Name tool_name, Pose target_pose, std::vector<JointValue> *goal_joint_value)
+{
+  Manipulator _manipulator = *manipulator;
+  JointValue target_angle[3];
+  std::vector<JointValue> target_angle_vector;
+
+  //// Position
+  // Compute Joint 1 Angle
+  Eigen::VectorXd position = Eigen::VectorXd::Zero(3);
+  Eigen::MatrixXd orientation = Eigen::MatrixXd::Zero(3,3);
+  position = target_pose.kinematic.position;
+  orientation = target_pose.kinematic.orientation;
+  // double d6 = 0.123;
+  double d4 = 0.126;
+  // if (with_gripper_)
+  // {
+  //   auto tool_length = _manipulator.getComponentRelativePositionFromParent(tool_name);
+  //   d6 += tool_length(0);
+  // }
+  Eigen::Vector3d position_2 = Eigen::VectorXd::Zero(3);
+  position_2 << orientation(0,0), orientation(1,0), orientation(2,0);
+  Eigen::Vector3d position_3 = Eigen::VectorXd::Zero(3);
+  position_3 = position - d4*position_2;
+  if (position_3(0) == 0) position_3(0) = 0.001;
+  target_angle[0].position = atan(position_3(1) / position_3(0));
+
+  // Compute Joint 3 Angle
+  Eigen::VectorXd position3 = Eigen::VectorXd::Zero(3); 
+  Eigen::VectorXd position3_2 = Eigen::VectorXd::Zero(3); 
+  // position3 << 0.0, 0.0, 0.126;
+  // position3_2 << 0.0, 0.0, 0.033;
+  position3 << 0.024, 0.0, 0.128;
+  position3_2 << 0.124, 0.0, 0.0;
+  Eigen::MatrixXd orientation3 = math::convertRPYToRotationMatrix(0,0,target_angle[0].position);
+  Eigen::VectorXd position3_3 = Eigen::VectorXd::Zero(3); 
+  position3_3 = position3 + orientation3 * position3_2;
+  Eigen::VectorXd position3_4 = Eigen::VectorXd::Zero(3); 
+  position3_4 = position_3 - position3_3;
+  // double l1 = sqrt(0.264*0.264 + 0.030*0.030);
+  // double l2 = sqrt(0.030*0.030 + 0.258*0.258);
+  double l1 = sqrt(0.024*0.024 + 0.128*0.128);
+  double l2 = sqrt(0.124*0.124);// + 0.258*0.258);
+  double phi = acos((l1*l1 + l2*l2 - position3_4.norm()*position3_4.norm()) / (2*l1*l2));
+  // double alpha1 = atan2(0.030, 0.264);
+  // double alpha2 = atan2(0.258, 0.030);
+  double alpha1 = atan2(0.024, 0.128);
+  double alpha2 = atan2(0.124, 0.001);
+  target_angle[2].position = PI - (phi-alpha1) - alpha2;
+
+  // Compute Joint 2 Angle
+  Eigen::VectorXd position2 = Eigen::VectorXd::Zero(3); 
+  Eigen::MatrixXd orientation2 = math::convertRPYToRotationMatrix(0,0,target_angle[0].position);
+  position2 = orientation2.inverse() * position3_4;
+  double beta1 = atan2(position2(2), position2(0));
+  double beta2 = acos((l1*l1 + position3_4.norm()*position3_4.norm() - l2*l2) / (2*l1*position3_4.norm()));
+  if (position3_4(2) > 0) target_angle[1].position = (PI/2-alpha1) - fabs(beta1) - beta2;
+  else target_angle[1].position = (PI/2-alpha1) + fabs(beta1) - beta2;
+
+  //// Orientation
+  // Compute Joint 4, 5, 6 Angles
+  // Eigen::MatrixXd orientation_to_joint3 = math::convertRPYToRotationMatrix(0,0,target_angle[0].position)
+  //                                       * math::convertRPYToRotationMatrix(0,target_angle[1].position,0)
+  //                                       * math::convertRPYToRotationMatrix(0,target_angle[2].position,0);
+  // Eigen::MatrixXd orientation_def = orientation_to_joint3.transpose() * orientation;
+
+  // if(orientation_def(0,0) <  1.0)
+  // {
+  //   if(orientation_def(0,0) >  -1.0)
+  //   { 
+  //     double joint4_angle_present = _manipulator.getJointPosition("joint4");
+  //     double joint4_angle_temp_1 = atan2(orientation_def(1,0), -orientation_def(2,0));
+  //     double joint4_angle_temp_2 = atan2(-orientation_def(1,0), orientation_def(2,0));
+
+  //     if(fabs(joint4_angle_temp_1-joint4_angle_present) < fabs(joint4_angle_temp_2-joint4_angle_present))
+  //     {
+  //       // log::println("joint4_angle_temp_1", fabs(joint4_angle_present-joint4_angle_temp_1));
+  //       target_angle[3].position = joint4_angle_temp_1;
+  //       target_angle[4].position = acos(orientation_def(0,0));
+  //       target_angle[5].position = atan2(orientation_def(0,1), orientation_def(0,2));
+  //     }
+  //     else
+  //     {
+  //       // log::println("joint4_angle_temp_2", fabs(joint4_angle_present-joint4_angle_temp_2));
+  //       target_angle[3].position = joint4_angle_temp_2;
+  //       target_angle[4].position = -acos(orientation_def(0,0));
+  //       target_angle[5].position = atan2(-orientation_def(0,1), -orientation_def(0,2));
+  //     }
+  //   }
+  //   else        // R(0,0) = -1
+  //   {
+  //     target_angle[3].position = _manipulator.getJointPosition("joint4");
+  //     target_angle[4].position = PI;
+  //     target_angle[5].position = atan2(-orientation_def(1,2), orientation_def(1,1))+target_angle[3].position;
+  //   }
+  // }
+  // else          // R(0,0) = 1
+  // {
+  //   target_angle[3].position = _manipulator.getJointPosition("joint4");
+  //   target_angle[4].position = 0.0;
+  //   target_angle[5].position = atan2(-orientation_def(1,2), orientation_def(1,1))-target_angle[3].position;
+  // }  
+  
+  // log::println("------------------------------------");
+  // log::println("End-effector Pose : ");
+  // log::println("position1: ", target_angle[0].position);
+  // log::println("position2: ", target_angle[1].position);
+  // log::println("position3: ", target_angle[2].position);
+  // log::println("position5: ", target_angle[4].position);
+  // log::println("position4: ", target_angle[3].position);
+  // log::println("position6: ", target_angle[5].position);
+  // log::println("------------------------------------");
+
+  if(std::isnan(target_angle[0].position) ||
+    std::isnan(target_angle[1].position) ||
+    std::isnan(target_angle[2].position) )//||
+    // std::isnan(target_angle[3].position) ||
+    // std::isnan(target_angle[4].position) ||
+    // std::isnan(target_angle[5].position) )
+  {
+    log::error("Target angle value is NAN!!");
+  return false;
+  }
 
 
+  if(std::isinf(target_angle[0].position) ||
+    std::isinf(target_angle[1].position) ||
+    std::isinf(target_angle[2].position) )//||
+    // std::isinf(target_angle[3].position) ||
+    // std::isinf(target_angle[4].position) ||
+    // std::isinf(target_angle[5].position) )
+  {
+    log::error("Target angle value is INF!!");
+  return false;
+  }
 
+  target_angle_vector.push_back(target_angle[0]);
+  target_angle_vector.push_back(target_angle[1]);
+  target_angle_vector.push_back(target_angle[2]);
+  // target_angle_vector.push_back(target_angle[3]);
+  // target_angle_vector.push_back(target_angle[4]);
+  // target_angle_vector.push_back(target_angle[5]);
 
+  *goal_joint_value = target_angle_vector;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  return true;
+}
